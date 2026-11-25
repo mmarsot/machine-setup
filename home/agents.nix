@@ -3,8 +3,8 @@
 # so Home Manager must not own them as read-only symlinks. Each file is seeded
 # once instead: created if missing, never overwritten, and for JSON merged
 # underneath what is already there. scripts/seed-file.sh does the work and keeps
-# every file private to its owner (mode 600, an existing file keeps its mode),
-# because these tools store credentials in them.
+# every file private to its owner (a new file gets mode 600, an existing one you
+# own is made private to you), because these tools store credentials in them.
 { config, lib, pkgs, ... }:
 let
   home = config.home.homeDirectory;
