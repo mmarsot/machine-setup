@@ -154,7 +154,7 @@ main() {
   if bashrc_sources_loader; then
     echo "New shells load it through ~/.bashrc."
   else
-    note "warning: ~/.bashrc does not load it yet; run the home step of setup.sh (./setup.sh --only home --force)."
+    note "warning: ~/.bashrc does not load it yet; run the home step of setup.sh (./setup.sh --force --only apt-prereqs,nix,home)."
   fi
 }
 
