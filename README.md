@@ -20,7 +20,7 @@ Install Ubuntu, run `setup.sh`, answer a few yes/no questions, and you end up in
 | <img src="assets/first-mate.png" height="48" alt=""> | **firstmate** | The agent you talk to. It dispatches the work. |
 | <img src="assets/crewmate.png" height="48" alt=""> | **Crewmates** | Claude Code and other agents, each in its own worktree. |
 | <img src="assets/terminal.png" height="48" alt=""> | **The terminal layer** | herdr, the axi tools, no-mistakes, lavish: what the crew works with. |
-| <img src="assets/anchor.png" height="48" alt=""> | **The base** | Nix + Home Manager, Chrome, Bitwarden: the ground it all stands on. |
+| <img src="assets/anchor.png" height="48" alt=""> | **The base** | Nix + Home Manager: the ground it all stands on. Chrome and Bitwarden are extras on top. |
 
 ```
         CORE                                   EXTRAS
