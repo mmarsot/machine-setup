@@ -75,7 +75,6 @@ assert_eq "MS_VAULT_ITEM overrides the item" "$(cat "$work/args")" "get notes ot
 
 # The loader accepts a 600 file and refuses a looser one.
 printf 'LOADED_VAR=yes\n' > "$work/env"; chmod 600 "$work/env"
-assert_eq "loader loads a mode-600 file" "$(bash -c ". '$REPO_ROOT/scripts/load-env.sh'; echo \${LOADED_VAR:-no}" MS_ENV_FILE="$work/env" 2>/dev/null)" "no"
 assert_eq "loader loads a mode-600 file (env var)" "$(MS_ENV_FILE="$work/env" bash -c ". '$REPO_ROOT/scripts/load-env.sh'; echo \${LOADED_VAR:-no}" 2>/dev/null)" "yes"
 chmod 644 "$work/env"
 assert_eq "loader refuses a world-readable file" "$(MS_ENV_FILE="$work/env" bash -c ". '$REPO_ROOT/scripts/load-env.sh'; echo \${LOADED_VAR:-no}" 2>/dev/null)" "no"

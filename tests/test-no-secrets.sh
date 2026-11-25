@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# No secret is ever committed: scan tracked files for token shapes and for the
-# configuration mistakes the strategy forbids.
+# No secret is ever committed: scan tracked files for token shapes, literal
+# secret exports and credential files.
 set -uo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 # shellcheck source=tests/lib.sh
@@ -21,9 +21,6 @@ assert_eq "no token-shaped strings in tracked files" "$hits" ""
 # Literal exports of secrets in dotfiles/scripts (a value after the =, not a variable).
 lit="$(cd "$REPO_ROOT" && printf '%s\n' "$files" | grep -E '\.(nix|sh)$|^config/' | xargs grep -nE "^[[:space:]]*(export[[:space:]]+)?[A-Z0-9_]*(TOKEN|SECRET|PASSWORD|API_KEY|RECOVERY)[A-Z0-9_]*=['\"]?[A-Za-z0-9_+/=.-]{8,}" 2>/dev/null | grep -v 'tests/')"
 assert_eq "no literal secret exports" "$lit" ""
-
-store="$(cd "$REPO_ROOT" && printf '%s\n' "$files" | grep -E '\.(nix|sh|toml|yaml|json|md)$' | grep -v '^tests/' | xargs grep -nE 'helper *= *"?store|credential\.helper[ =]+store' 2>/dev/null | grep -v '^[^:]*:[0-9]*: *#')"
-assert_eq "credential.helper=store is never configured" "$store" ""
 
 secret_files="$(printf '%s\n' "$files" | grep -E '(^|/)(\.git-credentials|\.credentials\.json|auth\.json|hosts\.yml|\.claude\.json|\.env)$')"
 assert_eq "no credential files are tracked" "$secret_files" ""

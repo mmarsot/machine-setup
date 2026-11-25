@@ -12,7 +12,8 @@
 
 # Order matters: everything that installs without a person comes first, so the
 # owner answers every question once, walks away, and returns for the logins.
-MS_STEPS="apt-prereqs nix home chrome bitwarden claude-code axi-tools herdr treehouse no-mistakes firstmate git-identity chrome-signin bitwarden-signin bitwarden-extension vault-env github-auth launch"
+# The root steps come first, together, while the sudo password is still cached.
+MS_STEPS="apt-prereqs chrome bitwarden nix home claude-code axi-tools herdr treehouse no-mistakes firstmate git-identity chrome-signin bitwarden-signin bitwarden-extension vault-env github-auth launch"
 
 FM_HOME="${FM_HOME:-$HOME/firstmate}"
 MS_STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/machine-setup"

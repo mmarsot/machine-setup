@@ -28,10 +28,10 @@ You are asked each question once, with Enter meaning yes. Declining a step also 
 | Step | What it does | Needs |
 |---|---|---|
 | `apt-prereqs` | `curl`, `git`, `ca-certificates` (sudo script) | |
-| `nix` | Nix, with flakes (sudo script) | `apt-prereqs` |
-| `home` | Home Manager from this flake: CLI tools, bash, git and gh config, ported agent config | `nix` |
 | `chrome` | Google Chrome from Google's `.deb` (sudo script) | `apt-prereqs` |
 | `bitwarden` | Bitwarden desktop from its `.deb` (sudo script) | `apt-prereqs` |
+| `nix` | Nix, with flakes (sudo script) | `apt-prereqs` |
+| `home` | Home Manager from this flake: CLI tools, bash, git and gh config, ported agent config | `nix` |
 | `claude-code` | Claude Code, with its own installer | `apt-prereqs` |
 | `axi-tools` | `gh-axi`, `chrome-devtools-axi`, `lavish-axi`, `tasks-axi`, `quota-axi` with npm, then each `setup hooks` | `home`, `claude-code` |
 | `herdr`, `treehouse` | their own installers | `apt-prereqs` |

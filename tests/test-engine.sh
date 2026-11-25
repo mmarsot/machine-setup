@@ -39,12 +39,14 @@ assert_contains "unattended still installs tools" "$out" "would run claude-code"
 out="$(setup_in_sandbox --dry-run --force --skip bogus)"
 assert_contains "unknown step is rejected" "$out" "unknown step"
 
-# Answering "n" declines a step and skips what needs it.
+# Answering "n" declines a step and skips what needs it, so nothing runs.
 sandbox="$(mktemp -d)"
-out="$(printf 'y\ny\nn\n' | HOME="$sandbox" XDG_CONFIG_HOME="$sandbox/.config" XDG_STATE_HOME="$sandbox/.state" \
-  "$REPO_ROOT/setup.sh" --only apt-prereqs,nix,home --force 2>&1 | sed -n '1,20p')"
+out="$(printf 'n\n' | HOME="$sandbox" XDG_CONFIG_HOME="$sandbox/.config" XDG_STATE_HOME="$sandbox/.state" \
+  "$REPO_ROOT/setup.sh" --only apt-prereqs,nix,home --force 2>&1)"
 rm -rf "$sandbox"
-assert_contains "interactive answers are honored" "$out" "[Y/n]"
+assert_contains "answering n declines the step" "$out" "skipped   apt-prereqs (declined)"
+assert_contains "a declined step skips its dependents" "$out" "skipped   nix (needs apt-prereqs)"
+assert_contains "the skip follows the dependency chain" "$out" "skipped   home (needs nix)"
 
 # Every step's dependencies come earlier in the order.
 (
@@ -59,12 +61,13 @@ assert_contains "interactive answers are honored" "$out" "[Y/n]"
 )
 assert_eq "dependencies precede dependents" "$?" "0"
 
-# Every sudo script is used by a step, and sudo appears nowhere else.
+# Every sudo script is run by a step, and every root command is a repo sudo/ script.
+out="$(setup_in_sandbox --dry-run --force)"
 for f in "$REPO_ROOT"/sudo/*.sh; do
   b="$(basename "$f")"; [ "$b" = _common.sh ] && continue
-  if grep -q "run_sudo $b\|sudo_[a-z_]*() *{ echo $b" "$REPO_ROOT/lib/steps.sh"; then pass "sudo/$b is wired to a step"; else fail "sudo/$b is not used by any step"; fi
+  assert_contains "sudo/$b is run by a step" "$out" "[dry-run] sudo $REPO_ROOT/sudo/$b"
 done
-stray="$(grep -rnE '(^|[;&|(]|run |exec |command )[[:space:]]*sudo[[:space:]]' "$REPO_ROOT" --include='*.sh' --include='*.nix' --exclude-dir=.git --exclude-dir=tests | grep -v '^[^:]*:[0-9]*: *#' | grep -v 'lib/ui.sh')"
-assert_eq "no sudo calls outside lib/ui.sh run_sudo" "$stray" ""
+stray="$(printf '%s\n' "$out" | grep -F '[dry-run]' | grep -wF sudo | grep -vF "[dry-run] sudo $REPO_ROOT/sudo/")"
+assert_eq "no root command outside the sudo/ scripts" "$stray" ""
 
 finish
