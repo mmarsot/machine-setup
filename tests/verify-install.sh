@@ -13,7 +13,7 @@ echo "installed machine"
 PATH="$HOME/.nix-profile/bin:$HOME/.local/bin:$PATH"
 login() { env -i HOME="$HOME" USER="$(id -un)" TERM=dumb bash -lc "$1" 2>/dev/null; }
 
-for tool in node npm jq rg delta htop tmux uv python3 perl bw gh git \
+for tool in node npm jq rg delta htop tmux uv python3 perl gh git \
   claude herdr treehouse no-mistakes gh-axi chrome-devtools-axi lavish-axi tasks-axi quota-axi; do
   if login "command -v $tool" >/dev/null; then pass "$tool is on a login shell's PATH"; else fail "$tool is missing from a login shell's PATH"; fi
 done

@@ -4,7 +4,8 @@
 #   desc_<id>   the yes/no question, without the trailing "?"
 #   deps_<id>   space-separated ids of the steps it needs (all listed earlier)
 #   flags_<id>  words: interactive (needs a person: skipped by --unattended),
-#               display (needs a graphical session), always (never marked done)
+#               display (needs a graphical session), always (never marked done),
+#               skippable (its run_ may exit MS_EXIT_SKIPPED when the owner skips it)
 #   sudo_<id>   (optional) the sudo/ script the step runs as root
 #   check_<id>  return 0 when the step is already satisfied on this machine
 #   run_<id>    do the work; every change goes through run / run_sh / run_sudo
@@ -18,6 +19,8 @@ MS_STEPS="apt-prereqs chrome bitwarden nix home claude-code axi-tools herdr tree
 FM_HOME="${FM_HOME:-$HOME/firstmate}"
 MS_STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/machine-setup"
 MS_ENV_DEFAULT="${XDG_CONFIG_HOME:-$HOME/.config}/machine-setup/env"
+
+MS_EXIT_SKIPPED=10 # a step's run_ exits with this when the owner chose to skip it
 
 fn_id() { printf '%s' "${1//-/_}"; }
 hook() { local h; h="$1_$(fn_id "$2")"; shift 2; "$h" "$@"; }
@@ -229,23 +232,41 @@ run_bitwarden_signin() {
 }
 
 # ---------------------------------------------------------- bitwarden-extension
+BITWARDEN_EXTENSION_ID=nngceckbapebfimnlniiiahkandclblb
+CHROME_PROFILE="${MS_CHROME_PROFILE:-$HOME/.config/google-chrome/Default}"
 desc_bitwarden_extension()  { echo "Open the Chrome Web Store so you can add the Bitwarden extension"; }
 deps_bitwarden_extension()  { echo chrome-signin bitwarden-signin; }
 flags_bitwarden_extension() { echo "interactive display"; }
-check_bitwarden_extension() { return 1; }
+# Chrome sync may already have installed it. Read-only: look for its folder in the
+# profile's Extensions directory.
+check_bitwarden_extension() {
+  compgen -G "$CHROME_PROFILE/Extensions/$BITWARDEN_EXTENSION_ID/*" >/dev/null 2>&1
+}
 run_bitwarden_extension() {
   ms_refresh_path
-  detach google-chrome-stable https://chromewebstore.google.com/detail/bitwarden-password-manager/nngceckbapebfimnlniiiahkandclblb
+  # Chrome sync can take a few seconds after the sign-in to bring it in.
+  local waited=0
+  while [ "$MS_DRY" != 1 ] && ! check_bitwarden_extension && [ "$waited" -lt "${MS_EXTENSION_WAIT:-10}" ]; do
+    sleep 1; waited=$((waited + 1))
+  done
+  if check_bitwarden_extension; then
+    info "The Bitwarden extension is already in this Chrome profile (Chrome sync); nothing to install."
+    info "In its settings choose \"Unlock with biometrics\" if you have not yet."
+    return 0
+  fi
+  detach google-chrome-stable "https://chromewebstore.google.com/detail/bitwarden-password-manager/$BITWARDEN_EXTENSION_ID"
   info "Click \"Add to Chrome\", then in the extension's settings choose \"Unlock with biometrics\"."
   wait_enter "    Press Enter when the extension is installed."
 }
 
 # ------------------------------------------------------------------- vault-env
-desc_vault_env()  { echo "Fetch your shell environment file from the Bitwarden vault (Secure Note \"${MS_VAULT_ITEM:-bashrc}\")"; }
+desc_vault_env()  { echo "Paste your shell environment (the Bitwarden Secure Note \"${MS_VAULT_ITEM:-bashrc}\") into ~/.config/machine-setup/env"; }
 deps_vault_env()  { echo home; }
-flags_vault_env() { echo interactive; }
+flags_vault_env() { echo "interactive skippable"; }
 check_vault_env() { [ -s "${MS_ENV_FILE:-$MS_ENV_DEFAULT}" ]; }
-run_vault_env()   { ms_refresh_path; run "$MS_REPO/scripts/vault-env.sh"; }
+# The script asks for the paste with the terminal echo off and prints only the
+# variable names it saved. Exit 10 means the owner skipped it.
+run_vault_env()   { run "$MS_REPO/scripts/vault-env.sh"; }
 
 # ----------------------------------------------------------------- github-auth
 desc_github_auth()  { echo "Log in to GitHub with gh"; }
@@ -280,10 +301,10 @@ The machine-setup repository is at $MS_REPO; its sudo scripts are in $MS_REPO/su
   export FM_HOME FM_BACKEND="${FM_BACKEND:-herdr}" MS_REPO
   # shellcheck disable=SC1091
   . "$MS_REPO/scripts/load-env.sh"
-  # A Claude Code token in the vault env means Claude is already signed in, so
+  # A Claude Code token in the pasted env file means Claude is already signed in, so
   # there is no login to walk through; still make sure it starts.
   if [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
-    info "Claude Code signs in with CLAUDE_CODE_OAUTH_TOKEN from the vault env file."
+    info "Claude Code signs in with CLAUDE_CODE_OAUTH_TOKEN from the env file you pasted."
   fi
   claude --version >/dev/null || die "claude does not start"
   exec claude "$prompt"
@@ -370,6 +391,10 @@ execute() {
     ( set -euo pipefail; hook run "$id" )
     rc=$?
     set -e
+    if [ "$rc" -eq "$MS_EXIT_SKIPPED" ] && csv_has "$(hook flags "$id" | tr ' ' ',')" skippable; then
+      set_status "$id" "skipped:skipped by you"
+      continue
+    fi
     if [ "$rc" -ne 0 ]; then
       set_status "$id" "failed"
       err "step \"$id\" failed (exit $rc)"
