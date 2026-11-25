@@ -70,9 +70,22 @@ desc_home()  { echo "Apply the Home Manager base: command-line tools, shell, git
 deps_home()  { echo nix; }
 flags_home() { :; }
 check_home() { return 1; } # tracked by its done marker only
+# Nix copies the repository into /nix/store, which every account can read, so
+# nothing that looks like a secret may be in what it copies: tracked files with
+# their uncommitted edits, or every file when this is not a git checkout.
+guard_store_source() {
+  local hits
+  if hits="$(ms_scan_store_bound "$MS_REPO")"; then return 0; fi
+  err "refusing to build: Nix would copy these files into /nix/store, which every account on this machine can read, and they look like they hold a secret:"
+  printf '%s\n' "$hits" | sed 's/^/      /' >&2
+  err "Take the secret out of them (secrets belong in ~/.config/machine-setup/env, see scripts/vault-env.sh). If this is a false alarm, change the file so it no longer matches."
+  return 1
+}
+
 run_home() {
   ms_refresh_path
   local flake="$MS_REPO#homeConfigurations.default.activationPackage"
+  guard_store_source
   if [ "$MS_DRY" = 1 ]; then
     info "[dry-run] nix build --impure --no-write-lock-file $flake"
     info "[dry-run] HOME_MANAGER_BACKUP_EXT=hm-backup <result>/activate   (existing dotfiles are kept as *.hm-backup)"
@@ -310,6 +323,18 @@ The machine-setup repository is at $MS_REPO; its sudo scripts are in $MS_REPO/su
   exec claude "$prompt"
 }
 
+# ---------------------------------------------------------------- secret audit
+# Runs on every setup.sh start, so a machine that already ran the setup is checked
+# too. Read-only: scripts/audit-secrets.sh prints what it found and the cleanup
+# steps, and deletes nothing.
+MS_AUDIT_FINDINGS=0
+audit_secrets() {
+  local rc=0
+  "$MS_REPO/scripts/audit-secrets.sh" || rc=$?
+  if [ "$rc" -ne 0 ]; then MS_AUDIT_FINDINGS=1; fi
+  return 0
+}
+
 # ------------------------------------------------------------------------ engine
 set_status() { printf '%s' "$2" > "$MS_RUN_DIR/$1"; }
 get_status() { if [ -f "$MS_RUN_DIR/$1" ]; then cat "$MS_RUN_DIR/$1"; else printf none; fi; }
@@ -435,6 +460,12 @@ print_summary() {
       *)        printf '    %s   %s\n' "$s" "$id" ;;
     esac
   done
+  if [ "$MS_AUDIT_FINDINGS" = 1 ]; then
+    warn "secrets are exposed on this machine (see the report above); rotate them and follow its cleanup steps"
+  fi
+  if [ ! -s "${MS_ENV_FILE:-$MS_ENV_DEFAULT}" ]; then
+    info "No env file yet. Keep tokens in ~/.config/machine-setup/env (scripts/vault-env.sh); never paste them into ~/.bashrc, which is a read-only link into the world-readable Nix store."
+  fi
 }
 
 list_steps() {
