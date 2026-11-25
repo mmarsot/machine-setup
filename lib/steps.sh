@@ -95,7 +95,7 @@ desc_bitwarden()  { echo "Install the Bitwarden desktop app"; }
 deps_bitwarden()  { echo apt-prereqs; }
 flags_bitwarden() { :; }
 sudo_bitwarden()  { echo install-bitwarden.sh; }
-check_bitwarden() { dpkg -s bitwarden >/dev/null 2>&1 || [ -x /opt/Bitwarden/bitwarden-app ]; }
+check_bitwarden() { dpkg -s bitwarden >/dev/null 2>&1 || [ -x /opt/Bitwarden/bitwarden ]; }
 run_bitwarden()   { run_sudo install-bitwarden.sh; }
 
 # ---------------------------------------------------------------- claude-code
@@ -188,13 +188,13 @@ flags_git_identity() { echo interactive; }
 check_git_identity() { [ -n "$(git config --file "$GIT_IDENTITY_FILE" user.email 2>/dev/null)" ]; }
 run_git_identity() {
   ms_refresh_path
-  local name="${MS_GIT_NAME:-}" email="${MS_GIT_EMAIL:-}"
+  local name email
   if [ "$MS_DRY" = 1 ]; then
     info "[dry-run] ask for a name and email, then git config --file $GIT_IDENTITY_FILE"
     return 0
   fi
-  if [ -z "$name" ]; then printf '    Git name: '; IFS= read -r name; fi
-  if [ -z "$email" ]; then printf '    Git email: '; IFS= read -r email; fi
+  printf '    Git name: '; IFS= read -r name
+  printf '    Git email: '; IFS= read -r email
   [ -n "$name" ] && [ -n "$email" ] || die "name and email are both required (skip this step instead)"
   mkdir -p "$(dirname "$GIT_IDENTITY_FILE")"
   git config --file "$GIT_IDENTITY_FILE" user.name "$name"
@@ -216,20 +216,13 @@ run_chrome_signin() {
 }
 
 # ------------------------------------------------------------ bitwarden-signin
-BW_AUTOSTART="${XDG_CONFIG_HOME:-$HOME/.config}/autostart/bitwarden.desktop"
 desc_bitwarden_signin()  { echo "Open the Bitwarden desktop app so you can log in and enable biometric unlock"; }
 deps_bitwarden_signin()  { echo bitwarden; }
 flags_bitwarden_signin() { echo "interactive display"; }
 check_bitwarden_signin() { return 1; }
 run_bitwarden_signin() {
   # The desktop app must be running for the browser extension to unlock with biometrics.
-  if [ "$MS_DRY" = 1 ]; then
-    info "[dry-run] write $BW_AUTOSTART (start Bitwarden at login)"
-  else
-    mkdir -p "$(dirname "$BW_AUTOSTART")"
-    printf '[Desktop Entry]\nType=Application\nName=Bitwarden\nExec=/opt/Bitwarden/bitwarden-app --autostart\nX-GNOME-Autostart-enabled=true\n' > "$BW_AUTOSTART"
-  fi
-  detach /opt/Bitwarden/bitwarden-app
+  detach /opt/Bitwarden/bitwarden
   info "In the Bitwarden app: log in (email, master password, two-step code), then in Settings"
   info "turn on \"Unlock with biometrics\" and \"Allow browser integration\"."
   wait_enter "    Press Enter when Bitwarden is logged in."

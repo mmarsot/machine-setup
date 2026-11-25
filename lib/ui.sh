@@ -67,7 +67,7 @@ run_sh() {
 # sudo_warmup: authenticate once, so the install steps can run without the owner
 # standing by. This only caches the sudo password; it changes nothing.
 sudo_warmup() {
-  if [ "$MS_DRY" = 1 ] || [ "$MS_UNATTENDED" = 1 ] || [ "$(id -u)" -eq 0 ]; then return 0; fi
+  if [ "$MS_DRY" = 1 ] || [ "$MS_UNATTENDED" = 1 ]; then return 0; fi
   command -v sudo >/dev/null 2>&1 || die "sudo is not installed"
   info "Some steps run a script from sudo/ as root. Authenticate once now:"
   sudo -v
@@ -78,9 +78,7 @@ run_sudo() {
   local script="$MS_REPO/sudo/$1"
   shift
   [ -f "$script" ] || die "missing $script"
-  if [ "$(id -u)" -eq 0 ]; then
-    run "$script" "$@"
-  elif [ "$MS_UNATTENDED" = 1 ]; then
+  if [ "$MS_UNATTENDED" = 1 ]; then
     run sudo -n "$script" "$@" # never stop to ask for a password
   else
     run sudo "$script" "$@"
