@@ -8,23 +8,23 @@
 
 # Token shapes: Anthropic, GitHub, AWS (including Bedrock API keys), Hugging Face,
 # Google, Slack, npm, GitLab, private keys.
-MS_SECRET_SHAPES='sk-ant-[A-Za-z0-9_-]{10,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|gho_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|ABSK[A-Za-z0-9+/=]{20,}|hf_[A-Za-z0-9]{30,}|AIza[0-9A-Za-z_-]{30,}|xox[baprs]-[A-Za-z0-9-]{10,}|npm_[A-Za-z0-9]{30,}|glpat-[A-Za-z0-9_-]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----'
+MS_LEAK_SHAPES='sk-ant-[A-Za-z0-9_-]{10,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|gho_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|ABSK[A-Za-z0-9+/=]{20,}|hf_[A-Za-z0-9]{30,}|AIza[0-9A-Za-z_-]{30,}|xox[baprs]-[A-Za-z0-9-]{10,}|npm_[A-Za-z0-9]{30,}|glpat-[A-Za-z0-9_-]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----'
 
 # A literal assignment to a secret-looking name: NAME=value (optionally exported)
 # whose value is eight or more characters and not a variable reference.
-MS_SECRET_ASSIGN='^[[:space:]]*(export[[:space:]]+)?[A-Za-z0-9_]*(TOKEN|SECRET|PASSWORD|PASSWD|API_?KEY|ACCESS_?KEY|RECOVERY|BACKUP_?CODES?|2FA|TWO_?FACTOR|DUAL_AUTH|CREDENTIAL|BEARER|PRIVATE_?KEY)[A-Za-z0-9_]*=["'"'"']?[^$"'"'"'[:space:]][^[:space:]]{7,}'
+MS_LEAK_ASSIGN='^[[:space:]]*(export[[:space:]]+)?[A-Za-z0-9_]*(TOKEN|SECRET|PASSWORD|PASSWD|API_?KEY|ACCESS_?KEY|RECOVERY|BACKUP_?CODES?|2FA|TWO_?FACTOR|DUAL_AUTH|CREDENTIAL|BEARER|PRIVATE_?KEY)[A-Za-z0-9_]*=["'"'"']?[^$"'"'"'[:space:]][^[:space:]]{7,}'
 
 # ms_secret_count FILE: how many lines look like a secret (0 for an unreadable file).
 ms_secret_count() {
   local n
-  n="$(grep -IcsE -e "$MS_SECRET_SHAPES" -e "$MS_SECRET_ASSIGN" "$1" 2>/dev/null)" || true
+  n="$(grep -IcsE -e "$MS_LEAK_SHAPES" -e "$MS_LEAK_ASSIGN" "$1" 2>/dev/null)" || true
   printf '%s\n' "${n:-0}"
 }
 
 # ms_secret_names FILE: the variable NAMES of the literal secret assignments, one
 # per line. sed prints only on a successful match, so a value can never be shown.
 ms_secret_names() {
-  grep -IsE "$MS_SECRET_ASSIGN" "$1" 2>/dev/null \
+  grep -IsE "$MS_LEAK_ASSIGN" "$1" 2>/dev/null \
     | sed -nE 's/^[[:space:]]*(export[[:space:]]+)?([A-Za-z0-9_]+)=.*/\2/p' \
     | sort -u
 }
@@ -32,7 +32,7 @@ ms_secret_names() {
 # ms_files_with_secrets FILE...: print the names of the files that contain a secret.
 ms_files_with_secrets() {
   [ "$#" -gt 0 ] || return 0
-  grep -IlsE -e "$MS_SECRET_SHAPES" -e "$MS_SECRET_ASSIGN" -- "$@" 2>/dev/null || true
+  grep -IlsE -e "$MS_LEAK_SHAPES" -e "$MS_LEAK_ASSIGN" -- "$@" 2>/dev/null || true
 }
 
 # ms_store_bound_files DIR: the files `nix build DIR#...` copies into the Nix store,
