@@ -1,0 +1,4 @@
+# Inputs are intentionally unpinned (see flake.nix); a lock file is local only.
+flake.lock
+result
+result-*

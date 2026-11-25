@@ -1,0 +1,71 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: shellcheck
+        run: shellcheck -x setup.sh lib/*.sh scripts/*.sh sudo/*.sh tests/*.sh
+
+  tests:
+    name: unit tests (no network, no changes)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: tests/run.sh
+
+  nix:
+    name: nix flake check
+    runs-on: ubuntu-latest
+    # The inputs are unpinned, so Nix resolves them through the GitHub API; an
+    # anonymous request from a shared runner IP hits its rate limit (HTTP 403).
+    env:
+      NIX_CONFIG: access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Nix with this repository's own script
+        run: sudo ./sudo/install-nix.sh
+      - name: nix flake check (builds the Home Manager generation for a throwaway user)
+        run: |
+          . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+          nix flake check --no-write-lock-file
+      - name: The shared modules evaluate for macOS too (evaluation only, no build)
+        run: |
+          . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+          nix eval --impure --no-write-lock-file --raw --expr '
+            let flake = builtins.getFlake (toString ./.); in
+            (flake.lib.mkHome {
+              system = "aarch64-darwin";
+              username = "ci";
+              homeDirectory = "/Users/ci";
+            }).activationPackage.drvPath'
+
+  setup-ubuntu-2604:
+    name: setup.sh in a fresh ubuntu:26.04 container
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - run: tests/docker.sh ubuntu:26.04
+
+  setup-runner:
+    name: setup.sh --unattended on the runner (real systemd, real multi-user Nix)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      # Chrome ships on the runner; Bitwarden's 130 MB .deb is covered by the
+      # container job. Steps that need a person are skipped by --unattended.
+      - run: ./setup.sh --unattended --skip bitwarden
+      - name: Dry run of the desktop-only steps (Chrome sign-in, Bitwarden, extension)
+        run: MS_FORCE_DISPLAY=1 ./setup.sh --dry-run --force

@@ -1,0 +1,8 @@
+{
+  "model": "opus",
+  "theme": "dark",
+  "voice": { "enabled": true, "mode": "hold" },
+  "voiceEnabled": true,
+  "skipDangerousModePermissionPrompt": true,
+  "agentPushNotifEnabled": true
+}
