@@ -4,7 +4,7 @@ How to work:
 - Ask the owner one yes or no question per step, in the order below, and let them skip any step. Skipping a step also skips the steps that depend on it.
 - Do the work yourself where an agent can, and tell the owner exactly what you are about to change before you change it.
 - Anything that needs sudo must be a script in the machine-setup repository (its path is given at the end of this prompt, under sudo/). Run one only after the owner gives permission for that script, and add a new script there rather than running ad-hoc sudo commands.
-- Never write a secret, token, password or recovery code into a file in a repository, a dotfile or the shell environment. Runtime tokens live in the Bitwarden vault note that setup.sh loads into ~/.config/machine-setup/env; two-factor recovery codes live in the vault only.
+- Never write a secret, token, password or recovery code into a file in a repository, a dotfile or the shell environment. Runtime tokens live in the Bitwarden vault note that the owner pastes into ~/.config/machine-setup/env during setup.sh; two-factor recovery codes live in the vault only.
 - This is a machine the owner sits at. Do not set it up as a headless or remote machine.
 - Do not migrate or script firstmate's data/ or config/: configure firstmate together with the owner, interactively.
 

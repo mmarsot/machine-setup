@@ -14,6 +14,5 @@
     nodejs # runtime for the npm-installed axi tools
     python3 # firstmate record export
     perl # firstmate process-event helpers
-    bitwarden-cli # `bw`: fetches the env file from the vault
   ];
 }

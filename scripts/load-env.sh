@@ -1,6 +1,6 @@
-# Load the vault-fetched env file into the current shell. Sourced from ~/.bashrc
-# (via home/shell.nix) and by setup.sh before it launches Claude Code. Refuses a
-# file that is not owned by the current user with mode 600.
+# Load the pasted env file (scripts/vault-env.sh) into the current shell. Sourced
+# from ~/.bashrc (via home/shell.nix) and by setup.sh before it launches Claude
+# Code. Refuses a file that is not owned by the current user with mode 600.
 # shellcheck shell=bash
 __ms_env="${MS_ENV_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/machine-setup/env}"
 if [ -f "$__ms_env" ]; then

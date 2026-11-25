@@ -5,7 +5,7 @@
     enableCompletion = true;
 
     # Runs for every bash startup that reads ~/.bashrc, before the
-    # interactive-only part. The env file is fetched from the vault by
+    # interactive-only part. The env file is pasted from the Bitwarden note by
     # setup.sh (scripts/vault-env.sh); no secret is ever written here.
     bashrcExtra = ''
       # Terminals opened before the first re-login still need PATH and FM_*.
