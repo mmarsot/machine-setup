@@ -59,7 +59,7 @@ main() {
     Darwin) die "macOS is not a shipped target yet; the Nix base is ready for it, the Homebrew layer is not" ;;
     *) die "unsupported OS: $(uname -s)" ;;
   esac
-  [ "$(id -u)" -ne 0 ] || [ "${MS_ALLOW_ROOT:-}" = 1 ] || die "run as your own user, not root (only the scripts in sudo/ get root)"
+  [ "$(id -u)" -ne 0 ] || die "run as your own user, not root (only the scripts in sudo/ get root)"
 
   MS_RUN_DIR="$(mktemp -d)"
   trap 'rm -rf "$MS_RUN_DIR"' EXIT
