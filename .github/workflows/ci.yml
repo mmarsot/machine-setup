@@ -27,6 +27,10 @@ jobs:
   nix:
     name: nix flake check
     runs-on: ubuntu-latest
+    # The inputs are unpinned, so Nix resolves them through the GitHub API; an
+    # anonymous request from a shared runner IP hits its rate limit (HTTP 403).
+    env:
+      NIX_CONFIG: access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - name: Install Nix with this repository's own script

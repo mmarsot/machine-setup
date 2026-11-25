@@ -83,6 +83,6 @@ tests/run.sh               # engine, dependencies, vault guard, secret scan; no 
 tests/docker.sh            # full unattended setup in a throwaway ubuntu:26.04 container, then verified
 ```
 
-CI (`.github/workflows/ci.yml`) runs shellcheck, the unit tests, `nix flake check` (which builds the whole Home Manager generation for a throwaway user), a macOS evaluation of the shared modules, the container run, and a native `./setup.sh --unattended` on an Ubuntu runner. The desktop-only steps (Chrome sign-in, Bitwarden sign-in and extension, the Bitwarden autostart entry) need a person and a display, so they are covered by `--dry-run` only. The systemd user unit that `no-mistakes daemon start` writes is likewise not exercised in the container.
+CI (`.github/workflows/ci.yml`) runs shellcheck, the unit tests, `nix flake check` (which builds the whole Home Manager generation for a throwaway user), a macOS evaluation of the shared modules, the container run, and a native `./setup.sh --unattended` on an Ubuntu runner. The desktop-only steps (Chrome sign-in, Bitwarden sign-in and extension, the Bitwarden autostart entry) need a person and a display, so they are covered by `--dry-run` only. The systemd user unit that the no-mistakes installer writes is likewise not exercised in the container.
 
 Optional extras that are deliberately not built yet are listed in [docs/follow-ups.md](docs/follow-ups.md).

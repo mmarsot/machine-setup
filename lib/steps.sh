@@ -145,12 +145,13 @@ run_no_mistakes() {
   ms_refresh_path
   # The global config (~/.no-mistakes/config.yaml) was seeded by the home step.
   run_sh 'curl -fsSL https://raw.githubusercontent.com/kunchenguid/no-mistakes/main/docs/install.sh | sh'
+  # The installer itself runs `no-mistakes daemon restart`, which writes and
+  # starts its own unit (the file name carries a per-install hash). A second
+  # `daemon start` would fail with "daemon already running".
   if [ "$MS_DRY" != 1 ] && ! { have systemctl && systemctl --user show-environment >/dev/null 2>&1; }; then
     warn "no systemd user session here; start the daemon later from a desktop session with: no-mistakes daemon start"
     return 0
   fi
-  # no-mistakes writes its own unit (the file name carries a per-install hash).
-  run no-mistakes daemon start
   no_mistakes_path_dropin
 }
 # The generated unit's PATH has no Nix profile, so the daemon would not find the
