@@ -201,11 +201,7 @@ rm -rf "$work/chrome"; mkdir -p "$profile"
 assert_eq "an empty profile has no extension" "$(detected)" "no"
 mkdir -p "$profile/Extensions/someotherextensionidxxxxxxxxxxxx/1.0_0"
 assert_eq "another extension does not count" "$(detected)" "no"
-printf '{"extensions":{"settings":{"someotherextensionidxxxxxxxxxxxx":{}}}}' > "$profile/Preferences"
-assert_eq "another extension in Preferences does not count" "$(detected)" "no"
-printf '{"extensions":{"settings":{"%s":{"state":1}}}}' "$ext_id" > "$profile/Preferences"
-assert_eq "the extension listed in Preferences counts" "$(detected)" "yes"
-rm -f "$profile/Preferences"; mkdir -p "$profile/Extensions/$ext_id/2024.1.0_0"
+mkdir -p "$profile/Extensions/$ext_id/2024.1.0_0"
 assert_eq "the extension's folder counts" "$(detected)" "yes"
 assert_eq "an installed extension makes the step already done" \
   "$(in_steps satisfied bitwarden-extension && echo yes || echo no)" "yes"
@@ -234,10 +230,17 @@ echo "engine: a skipped step"
 out="$( MS_STATE_DIR="$work/state" HOME="$home" bash -c '
   . "'"$REPO_ROOT"'/lib/ui.sh"; . "'"$REPO_ROOT"'/lib/steps.sh"
   MS_STEPS=fake; MS_RUN_DIR="$(mktemp -d)"
-  desc_fake() { echo fake; }; deps_fake() { :; }; flags_fake() { :; }; run_fake() { return 10; }
+  desc_fake() { echo fake; }; deps_fake() { :; }; flags_fake() { echo skippable; }; run_fake() { return 10; }
   set_status fake planned; execute >/dev/null 2>&1
   get_status fake; echo; [ -e "$(marker fake)" ] && echo marked || echo unmarked' )"
-assert_contains "exit 10 is a skip, not a failure" "$out" "skipped:skipped by you"
+assert_contains "exit 10 from a skippable step is a skip, not a failure" "$out" "skipped:skipped by you"
 assert_contains "a skipped step is not marked done" "$out" "unmarked"
+out="$( MS_STATE_DIR="$work/state" HOME="$home" bash -c '
+  . "'"$REPO_ROOT"'/lib/ui.sh"; . "'"$REPO_ROOT"'/lib/steps.sh"
+  MS_STEPS=fake; MS_RUN_DIR="$(mktemp -d)"
+  desc_fake() { echo fake; }; deps_fake() { :; }; flags_fake() { :; }; run_fake() { return 10; }
+  set_status fake planned; execute >/dev/null 2>&1
+  get_status fake' )"
+assert_eq "exit 10 from any other step is a failure" "$out" "failed"
 
 finish

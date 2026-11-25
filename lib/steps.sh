@@ -4,7 +4,8 @@
 #   desc_<id>   the yes/no question, without the trailing "?"
 #   deps_<id>   space-separated ids of the steps it needs (all listed earlier)
 #   flags_<id>  words: interactive (needs a person: skipped by --unattended),
-#               display (needs a graphical session), always (never marked done)
+#               display (needs a graphical session), always (never marked done),
+#               skippable (its run_ may exit MS_EXIT_SKIPPED when the owner skips it)
 #   sudo_<id>   (optional) the sudo/ script the step runs as root
 #   check_<id>  return 0 when the step is already satisfied on this machine
 #   run_<id>    do the work; every change goes through run / run_sh / run_sudo
@@ -237,11 +238,9 @@ desc_bitwarden_extension()  { echo "Open the Chrome Web Store so you can add the
 deps_bitwarden_extension()  { echo chrome-signin bitwarden-signin; }
 flags_bitwarden_extension() { echo "interactive display"; }
 # Chrome sync may already have installed it. Read-only: look for its folder in the
-# profile's Extensions directory, or its entry in Preferences.
+# profile's Extensions directory.
 check_bitwarden_extension() {
-  compgen -G "$CHROME_PROFILE/Extensions/$BITWARDEN_EXTENSION_ID/*" >/dev/null 2>&1 && return 0
-  have jq && [ -r "$CHROME_PROFILE/Preferences" ] &&
-    jq -e --arg id "$BITWARDEN_EXTENSION_ID" '.extensions.settings[$id] != null' "$CHROME_PROFILE/Preferences" >/dev/null 2>&1
+  compgen -G "$CHROME_PROFILE/Extensions/$BITWARDEN_EXTENSION_ID/*" >/dev/null 2>&1
 }
 run_bitwarden_extension() {
   ms_refresh_path
@@ -263,7 +262,7 @@ run_bitwarden_extension() {
 # ------------------------------------------------------------------- vault-env
 desc_vault_env()  { echo "Paste your shell environment (the Bitwarden Secure Note \"${MS_VAULT_ITEM:-bashrc}\") into ~/.config/machine-setup/env"; }
 deps_vault_env()  { echo home; }
-flags_vault_env() { echo interactive; }
+flags_vault_env() { echo "interactive skippable"; }
 check_vault_env() { [ -s "${MS_ENV_FILE:-$MS_ENV_DEFAULT}" ]; }
 # The script asks for the paste with the terminal echo off and prints only the
 # variable names it saved. Exit 10 means the owner skipped it.
@@ -392,7 +391,7 @@ execute() {
     ( set -euo pipefail; hook run "$id" )
     rc=$?
     set -e
-    if [ "$rc" -eq "$MS_EXIT_SKIPPED" ]; then
+    if [ "$rc" -eq "$MS_EXIT_SKIPPED" ] && csv_has "$(hook flags "$id" | tr ' ' ',')" skippable; then
       set_status "$id" "skipped:skipped by you"
       continue
     fi
