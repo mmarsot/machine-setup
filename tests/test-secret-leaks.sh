@@ -98,8 +98,6 @@ assert_eq "Nix is never run" "$(test -e "$work/nix-called" && echo yes || echo n
 assert_contains "the file is named" "$out" "home/notes.txt"
 assert_contains "the reason is given" "$out" "every account"
 assert_not_contains "the value is not shown" "$out" "$fake_value"
-out="$(run_home_in "$work/repos/leaky" MS_SKIP_SECRET_SCAN=1)"; rc=$?
-assert_eq "MS_SKIP_SECRET_SCAN=1 overrides a false alarm" "$rc" "0"
 out="$(run_home_in "$work/repos/clean" MS_X=1)"; rc=$?
 assert_eq "a clean source builds and activates" "$rc" "0"
 assert_eq "Nix ran" "$(test -e "$work/nix-called" && echo yes || echo no)" "yes"
@@ -213,7 +211,7 @@ assert_eq "and has the content" "$(cat "$sd/new/.npmrc")" "prefix=/x"
 echo 'registry_token=kept' > "$sd/.npmrc"; chmod 644 "$sd/.npmrc"
 seed copy "$sd/.npmrc" "$src/npmrc" >/dev/null
 assert_eq "an existing copy is not overwritten" "$(cat "$sd/.npmrc")" "registry_token=kept"
-assert_eq "and keeps its mode" "$(mode_of "$sd/.npmrc")" "644"
+assert_eq "but a world-readable one is made private" "$(mode_of "$sd/.npmrc")" "600"
 seed json "$sd/s1/settings.json" "$src/settings.json" >/dev/null
 assert_eq "new JSON has mode 600" "$(mode_of "$sd/s1/settings.json")" "600"
 assert_eq "new JSON has the content" "$(jq -c . "$sd/s1/settings.json")" '{"model":"opus","theme":"dark","nested":{"a":1}}'
@@ -223,7 +221,7 @@ assert_eq "a merge keeps the owner's values and fills the rest" "$(jq -cS . "$sd
 assert_eq "a merged 600 file stays 600" "$(mode_of "$sd/s2.json")" "600"
 cp "$sd/s2.json" "$sd/s3.json"; chmod 640 "$sd/s3.json"
 seed json "$sd/s3.json" "$src/settings.json" >/dev/null
-assert_eq "a merged file keeps whatever mode it had" "$(mode_of "$sd/s3.json")" "640"
+assert_eq "a merged group-readable file is made private" "$(mode_of "$sd/s3.json")" "600"
 inode_before="$(ls -i "$sd/s3.json" | cut -d' ' -f1)"
 seed json "$sd/s3.json" "$src/settings.json" >/dev/null
 assert_eq "the merge rewrites in place, not through a new file" "$(ls -i "$sd/s3.json" | cut -d' ' -f1)" "$inode_before"

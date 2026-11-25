@@ -46,7 +46,14 @@ assert_eq "seeded config files are private to their owner" "$(stat -c %a "$HOME/
 # Nothing secret was created, and the env loader is inert without a vault file.
 assert_eq "no env file without the vault step" "$(test -e "$HOME/.config/machine-setup/env" && echo yes || echo no)" "no"
 assert_eq "the audit finds no exposed secret" "$("$REPO_ROOT/scripts/audit-secrets.sh" >/dev/null 2>&1; echo $?)" "0"
-assert_eq "a login shell reads the generated .profile loader" "$(grep -c 'machine-setup/load-env.sh' "$HOME/.profile")" "1"
+# Login shells load the env file through the generated dotfiles.
+env_file="$HOME/.config/machine-setup/env"
+probe_value="fake-value-${RANDOM}${RANDOM}"
+(umask 077; mkdir -p "${env_file%/*}"; printf 'export MS_PROBE_VALUE=%s\n' "$probe_value" > "$env_file")
+probe='echo "${MS_PROBE_VALUE:-unset}"'
+assert_eq "sh -lc sees the env file" "$(env -i HOME="$HOME" PATH=/usr/bin:/bin sh -lc "$probe" 2>/dev/null | tail -1)" "$probe_value"
+assert_eq "bash -lc sees the env file" "$(env -i HOME="$HOME" PATH=/usr/bin:/bin bash -lc "$probe" 2>/dev/null | tail -1)" "$probe_value"
+rm -f "$env_file"
 assert_eq "no stored git credentials" "$(test -e "$HOME/.git-credentials" && echo yes || echo no)" "no"
 
 finish

@@ -8,7 +8,8 @@
 #
 # These files belong to tools that later store credentials in them (an npm auth
 # token in ~/.npmrc, an env block in Claude Code's settings.json), so a new file is
-# created with mode 600 and an existing file keeps the mode it has: the merge
+# created with mode 600 and an existing regular file you own loses its group and
+# other permissions (older installs created them with mode 644). The merge
 # rewrites it in place instead of replacing it with a freshly created one.
 set -euo pipefail
 umask 077
@@ -19,6 +20,9 @@ if [ ! -e "$target" ]; then
   mkdir -p "$(dirname "$target")"
   install -m 600 "$source" "$target"
   exit 0
+fi
+if [ -f "$target" ] && [ ! -L "$target" ] && [ -O "$target" ]; then
+  chmod go-rwx "$target"
 fi
 [ "$mode" = json ] || exit 0
 

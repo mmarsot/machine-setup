@@ -75,11 +75,10 @@ check_home() { return 1; } # tracked by its done marker only
 # their uncommitted edits, or every file when this is not a git checkout.
 guard_store_source() {
   local hits
-  [ "${MS_SKIP_SECRET_SCAN:-0}" != 1 ] || return 0
   if hits="$(ms_scan_store_bound "$MS_REPO")"; then return 0; fi
   err "refusing to build: Nix would copy these files into /nix/store, which every account on this machine can read, and they look like they hold a secret:"
   printf '%s\n' "$hits" | sed 's/^/      /' >&2
-  err "Take the secret out of them (secrets belong in ~/.config/machine-setup/env, see scripts/vault-env.sh), or set MS_SKIP_SECRET_SCAN=1 if this is a false alarm."
+  err "Take the secret out of them (secrets belong in ~/.config/machine-setup/env, see scripts/vault-env.sh). If this is a false alarm, change the file so it no longer matches."
   return 1
 }
 
