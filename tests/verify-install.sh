@@ -40,9 +40,13 @@ assert_eq "Claude keybindings are ported" "$(jq -r '.bindings[0].bindings["meta+
 assert_contains "no-mistakes config is ported" "$(cat "$HOME/.no-mistakes/config.yaml")" 'ci_timeout: "168h"'
 assert_contains "herdr config is ported" "$(cat "$HOME/.config/herdr/config.toml")" 'name = "catppuccin"'
 assert_eq "npm globals install under ~/.local" "$(cat "$HOME/.npmrc")" "prefix=$HOME/.local"
+# (settings.json is rewritten by the axi hooks, so only files no tool touches are checked.)
+assert_eq "seeded config files are private to their owner" "$(stat -c %a "$HOME/.npmrc" "$HOME/.claude/keybindings.json" | sort -u)" "600"
 
 # Nothing secret was created, and the env loader is inert without a vault file.
 assert_eq "no env file without the vault step" "$(test -e "$HOME/.config/machine-setup/env" && echo yes || echo no)" "no"
+assert_eq "the audit finds no exposed secret" "$("$REPO_ROOT/scripts/audit-secrets.sh" >/dev/null 2>&1; echo $?)" "0"
+assert_eq "a login shell reads the generated .profile loader" "$(grep -c 'machine-setup/load-env.sh' "$HOME/.profile")" "1"
 assert_eq "no stored git credentials" "$(test -e "$HOME/.git-credentials" && echo yes || echo no)" "no"
 
 finish

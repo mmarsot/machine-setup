@@ -23,6 +23,8 @@ export USER="${USER:-$(id -un)}" # Home Manager's activate script requires it
 
 # shellcheck source=lib/ui.sh
 . "$MS_REPO/lib/ui.sh"
+# shellcheck source=lib/secrets.sh
+. "$MS_REPO/lib/secrets.sh"
 # shellcheck source=lib/steps.sh
 . "$MS_REPO/lib/steps.sh"
 
@@ -67,6 +69,7 @@ main() {
 
   ms_refresh_path
   [ "$MS_DRY" = 1 ] && log "Dry run: nothing will be changed"
+  audit_secrets
   plan
   if needs_sudo; then sudo_warmup; fi
   execute
