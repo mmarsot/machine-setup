@@ -145,6 +145,7 @@ echo "  ~/.bashrc loading"
 rm -rf "$work/config" "$home/.bashrc"
 paste "export A=1"
 assert_contains "a missing loader is called out" "$out" "does not load it yet"
+# shellcheck disable=SC2016  # the literal loader line, expanded by bash later
 echo '[ -r "$HOME/.config/machine-setup/load-env.sh" ] && . "$HOME/.config/machine-setup/load-env.sh"' > "$home/.bashrc"
 rm -rf "$work/config"; paste "export A=1"
 assert_contains "a bashrc with the loader is accepted" "$out" "through ~/.bashrc"
@@ -194,6 +195,7 @@ echo "bitwarden-extension"
 profile="$work/chrome/Default"
 ext_id=nngceckbapebfimnlniiiahkandclblb
 # steps() sources the step definitions in a subshell with the profile under test.
+# shellcheck disable=SC2030  # the exports are meant to stay inside the subshell
 in_steps() { ( export MS_CHROME_PROFILE="$profile" HOME="$home"; . "$REPO_ROOT/lib/ui.sh"; . "$REPO_ROOT/lib/steps.sh"; "$@" ); }
 detected() { if in_steps check_bitwarden_extension; then echo yes; else echo no; fi; }
 
@@ -213,6 +215,7 @@ cat > "$work/fakebin/google-chrome-stable" <<'FAKE'
 printf '%s\n' "$*" >> "${FAKE_LOG:?}"
 FAKE
 chmod +x "$work/fakebin/google-chrome-stable"
+# shellcheck disable=SC2030,SC2031  # same: subshell-local environment
 run_ext() { ( export PATH="$work/fakebin:$PATH" FAKE_LOG="$work/chrome.log" MS_EXTENSION_WAIT=0 MS_CHROME_PROFILE="$profile" HOME="$home"
   . "$REPO_ROOT/lib/ui.sh"; . "$REPO_ROOT/lib/steps.sh"; run_bitwarden_extension </dev/null 2>&1 ); }
 rm -f "$work/chrome.log"

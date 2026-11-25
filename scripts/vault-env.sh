@@ -150,7 +150,7 @@ main() {
   TMP=""
 
   echo "Saved $(printf '%s\n' "$names" | wc -l | tr -d ' ') variable(s) to $DEST (mode 600):"
-  printf '  %s\n' $names
+  printf '%s\n' "$names" | sed 's/^/  /'
   if bashrc_sources_loader; then
     echo "New shells load it through ~/.bashrc."
   else
