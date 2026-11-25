@@ -8,5 +8,5 @@ Notes on optional extras that are out of scope for the first version. None of th
 - **Other agent harnesses** (Codex, Pi, OpenCode, CodeGraph). Installed by the guided session on request through their own installers or npm.
 - **Project toolchains** (Rust via rustup, awscli2, google-cloud-sdk, rclone, build essentials). Added per project by the guided session, preferably as Home Manager packages.
 - **Voice dictation, local models (Ollama), Hugging Face.** Optional dev-adjacent tooling, off by default.
-- **Cleanup of this repository's bootstrap.** The private repository needs GitHub access before it can be cloned; a short public bootstrap script, or a release asset fetched with a token from the vault, could shorten step 1 of the README.
+- **One-line bootstrap.** The repository is public, so a short script fetched with `curl` could install git and clone it; today README step 1 is two commands.
 - **GNOME preferences** (dark style, keyboard layout, tiling). Per-OS by design; could be a `dconf` step.

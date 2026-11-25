@@ -7,15 +7,16 @@ Set up a fresh Ubuntu (later macOS) machine with the full development toolchain:
 
 ### 1. Get the repository onto the machine
 
-The repository is private, so GitHub has to know you before you can clone it. Either:
+The repository is public, so no login is needed to get it:
 
 ```sh
-sudo apt update && sudo apt install -y git gh
-gh auth login            # GitHub.com, HTTPS, "Login with a web browser"
-gh repo clone mmarsot/machine-setup ~/machine-setup
+sudo apt update && sudo apt install -y git
+git clone https://github.com/mmarsot/machine-setup ~/machine-setup
 ```
 
-or sign in to GitHub in the browser, download the repository as a ZIP, and unzip it to `~/machine-setup`. (These bootstrap commands are the only sudo outside this repository's `sudo/` scripts; they exist because the script cannot fetch itself.)
+Without git, a tarball works too: `curl -fsSL https://github.com/mmarsot/machine-setup/archive/refs/heads/main.tar.gz | tar xz && mv machine-setup-main ~/machine-setup`. (Piping only `setup.sh` into bash does not work: it needs the rest of the repository next to it.) If you prefer `gh`, install it and run `gh repo clone mmarsot/machine-setup ~/machine-setup` instead. The `sudo apt` line is the only sudo outside this repository's `sudo/` scripts; it exists because the script cannot fetch itself.
+
+GitHub login happens later, inside the setup (the `github-auth` step), and matters for cloning private projects afterwards, not for this clone.
 
 ### 2. Run it
 
