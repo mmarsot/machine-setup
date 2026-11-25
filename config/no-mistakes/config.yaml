@@ -1,0 +1,18 @@
+# no-mistakes global configuration (non-default keys only; see `no-mistakes --help`).
+agent: claude
+ci_timeout: "168h"
+step_quiet_warning: "10m"
+daemon_connect_timeout: "3s"
+session_reuse: true
+log_level: info
+auto_fix:
+  rebase: 3
+  lint: 3
+  test: 3
+  review: 0
+  document: 3
+  ci: 3
+intent:
+  enabled: true
+  threshold: 0.2
+  slack_days: 3
