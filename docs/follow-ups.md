@@ -10,3 +10,4 @@ Notes on optional extras that are out of scope for the first version. None of th
 - **Voice dictation, local models (Ollama), Hugging Face.** Optional dev-adjacent tooling, off by default.
 - **One-line bootstrap.** The repository is public, so a short script fetched with `curl` could install git and clone it; today README step 1 is two commands.
 - **GNOME preferences** (dark style, keyboard layout, tiling). Per-OS by design; could be a `dconf` step.
+- **Bitwarden login autostart.** `setup.sh` does not write an autostart entry: the Bitwarden app manages `~/.config/autostart/bitwarden.desktop` itself and overwrites any other entry. Upstream's entry starts the binary directly (`/opt/Bitwarden/bitwarden-app --autostart`) rather than the `/opt/Bitwarden/bitwarden` launcher, so at login the app runs without the launcher's `ulimit -c 0` and forced X11. A fix belongs upstream; setup.sh itself still opens the app through the launcher.

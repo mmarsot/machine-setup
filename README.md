@@ -40,7 +40,7 @@ You are asked each question once, with Enter meaning yes. Declining a step also 
 | `firstmate` | `git clone https://github.com/kunchenguid/firstmate ~/firstmate` | `home`, `claude-code`, `axi-tools`, `treehouse`, `no-mistakes` |
 | `git-identity` | asks for your git name and email, kept in `~/.config/git/identity`, not in the repo | `home` |
 | `chrome-signin` | opens Chrome so you can sign in | `chrome` |
-| `bitwarden-signin` | opens Bitwarden so you can log in and enable biometric unlock; starts it at login | `bitwarden` |
+| `bitwarden-signin` | opens Bitwarden so you can log in and enable biometric unlock | `bitwarden` |
 | `bitwarden-extension` | opens the Chrome Web Store page of the Bitwarden extension | `chrome-signin`, `bitwarden-signin` |
 | `vault-env` | fetches your shell environment file from the vault | `home` |
 | `github-auth` | `gh auth login`, after Bitwarden so the extension can fill the form | `home` |
@@ -84,6 +84,6 @@ tests/run.sh               # engine, dependencies, vault guard, secret scan; no 
 tests/docker.sh            # full unattended setup in a throwaway ubuntu:26.04 container, then verified
 ```
 
-CI (`.github/workflows/ci.yml`) runs shellcheck, the unit tests, `nix flake check` (which builds the whole Home Manager generation for a throwaway user), a macOS evaluation of the shared modules, the container run, and a native `./setup.sh --unattended` on an Ubuntu runner. The desktop-only steps (Chrome sign-in, Bitwarden sign-in and extension, the Bitwarden autostart entry) need a person and a display, so they are covered by `--dry-run` only. The systemd user unit that the no-mistakes installer writes is likewise not exercised in the container.
+CI (`.github/workflows/ci.yml`) runs shellcheck, the unit tests, `nix flake check` (which builds the whole Home Manager generation for a throwaway user), a macOS evaluation of the shared modules, the container run, and a native `./setup.sh --unattended` on an Ubuntu runner. The desktop-only steps (Chrome sign-in, Bitwarden sign-in and extension) need a person and a display, so they are covered by `--dry-run` only. The systemd user unit that the no-mistakes installer writes is likewise not exercised in the container.
 
 Optional extras that are deliberately not built yet are listed in [docs/follow-ups.md](docs/follow-ups.md).

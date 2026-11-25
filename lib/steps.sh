@@ -216,19 +216,12 @@ run_chrome_signin() {
 }
 
 # ------------------------------------------------------------ bitwarden-signin
-BW_AUTOSTART="${XDG_CONFIG_HOME:-$HOME/.config}/autostart/bitwarden.desktop"
 desc_bitwarden_signin()  { echo "Open the Bitwarden desktop app so you can log in and enable biometric unlock"; }
 deps_bitwarden_signin()  { echo bitwarden; }
 flags_bitwarden_signin() { echo "interactive display"; }
 check_bitwarden_signin() { return 1; }
 run_bitwarden_signin() {
   # The desktop app must be running for the browser extension to unlock with biometrics.
-  if [ "$MS_DRY" = 1 ]; then
-    info "[dry-run] write $BW_AUTOSTART (start Bitwarden at login)"
-  else
-    mkdir -p "$(dirname "$BW_AUTOSTART")"
-    printf '[Desktop Entry]\nType=Application\nName=Bitwarden\nExec=/opt/Bitwarden/bitwarden --autostart\nX-GNOME-Autostart-enabled=true\n' > "$BW_AUTOSTART"
-  fi
   detach /opt/Bitwarden/bitwarden
   info "In the Bitwarden app: log in (email, master password, two-step code), then in Settings"
   info "turn on \"Unlock with biometrics\" and \"Allow browser integration\"."
