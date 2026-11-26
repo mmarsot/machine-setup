@@ -9,6 +9,8 @@
     ripgrep
     delta
     htop
+    btop # live CPU and RAM monitor
+    gh-dash # terminal dashboard of pull requests and issues; needs `gh auth login` at use time
     tmux # fallback backend for firstmate when herdr is not wanted
     uv # python tooling, and `uvx` for MCP servers
     nodejs # runtime for the npm-installed axi tools
